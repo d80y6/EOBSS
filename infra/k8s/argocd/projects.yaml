@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: telcoflow
+  namespace: argocd
+spec:
+  description: TelcoFlow Platform Project
+  sourceRepos:
+  - '*'
+  destinations:
+  - namespace: telcoflow-*
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'

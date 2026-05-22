@@ -1,0 +1,21 @@
+# Binaries
+*-server
+bin/
+
+# Dependencies
+vendor/
+node_modules/
+venv/
+.env
+
+# IDEs
+.idea/
+.vscode/
+
+# Build artifacts
+.next/
+dist/
+build/
+
+# Logs
+*.log

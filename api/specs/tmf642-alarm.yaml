@@ -1,0 +1,12 @@
+openapi: 3.0.1
+info:
+  title: Alarm Management
+  description: TMF642 Alarm Management API
+  version: 4.0.0
+paths:
+  /alarm:
+    get:
+      summary: List or find Alarm objects
+      responses:
+        '200':
+          description: Success

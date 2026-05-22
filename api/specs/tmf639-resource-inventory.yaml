@@ -1,0 +1,12 @@
+openapi: 3.0.1
+info:
+  title: Resource Inventory Management
+  description: TMF639 Resource Inventory Management API
+  version: 4.0.0
+paths:
+  /resource:
+    get:
+      summary: List or find Resource objects
+      responses:
+        '200':
+          description: Success

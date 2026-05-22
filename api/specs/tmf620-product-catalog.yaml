@@ -1,0 +1,29 @@
+openapi: 3.0.1
+info:
+  title: Product Catalog Management
+  description: TMF620 Product Catalog Management API
+  version: 4.1.0
+paths:
+  /productOffering:
+    get:
+      summary: List or find ProductOffering objects
+      responses:
+        '200':
+          description: Success
+    post:
+      summary: Create a ProductOffering
+      responses:
+        '201':
+          description: Created
+  /productOffering/{id}:
+    get:
+      summary: Retrieve a ProductOffering by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success

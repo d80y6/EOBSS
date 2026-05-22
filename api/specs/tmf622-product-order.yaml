@@ -1,0 +1,23 @@
+openapi: 3.0.1
+info:
+  title: Product Order Management
+  description: TMF622 Product Order Management API
+  version: 4.0.0
+paths:
+  /productOrder:
+    post:
+      summary: Create a ProductOrder
+      responses:
+        '201':
+          description: Created
+    get:
+      summary: List ProductOrders
+      responses:
+        '200':
+          description: Success
+  /productOrder/{id}:
+    get:
+      summary: Retrieve a ProductOrder by ID
+      responses:
+        '200':
+          description: Success

@@ -1,0 +1,18 @@
+openapi: 3.0.1
+info:
+  title: Customer Bill Management
+  description: TMF678 Customer Bill Management API
+  version: 4.0.0
+paths:
+  /customerBill:
+    get:
+      summary: List or find CustomerBill objects
+      responses:
+        '200':
+          description: Success
+  /customerBill/{id}:
+    get:
+      summary: Retrieve a CustomerBill by ID
+      responses:
+        '200':
+          description: Success
