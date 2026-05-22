@@ -5,23 +5,62 @@ import (
 	"github.com/telcoflow/telcoflow/services/billing-service/internal/domain"
 )
 
-// RatingEngine handles usage-based charging
+type PriceTier struct {
+	FromQuantity float64
+	ToQuantity   float64
+	UnitPrice    float64
+}
+
+type PricePlan struct {
+	ProductID string
+	Currency  string
+	Tiers     []PriceTier
+}
+
+// RatingEngine handles complex usage-based charging
 type RatingEngine struct {
-	// In a real scenario, this would load price plans from the Product Catalog
+	plans map[string]PricePlan
+}
+
+func NewRatingEngine() *RatingEngine {
+	return &RatingEngine{
+		plans: make(map[string]PricePlan),
+	}
 }
 
 func (e *RatingEngine) RateUsage(ctx context.Context, record *domain.UsageRecord) error {
-	// Simplified rating logic for a carrier-grade foundation
-	rate := 0.0
-	switch record.UsageType {
-	case "Data":
-		rate = 0.01 // $0.01 per MB
-	case "Voice":
-		rate = 0.05 // $0.05 per Minute
-	case "SMS":
-		rate = 0.02 // $0.02 per SMS
+	// In a real system, we would fetch the plan based on the service/product from a cache or database
+	plan, ok := e.plans[record.UsageType]
+	if !ok {
+		// Default fallback for foundation demo
+		rate := 0.01
+		record.RatedAmount = record.UsageQuantity * rate
+		return nil
 	}
 
-	record.RatedAmount = record.UsageQuantity * rate
+	amount := 0.0
+	remaining := record.UsageQuantity
+
+	for _, tier := range plan.Tiers {
+		if remaining <= 0 {
+			break
+		}
+
+		tierVolume := tier.ToQuantity - tier.FromQuantity
+		if tierVolume <= 0 { // Infinite tier
+			amount += remaining * tier.UnitPrice
+			break
+		}
+
+		if remaining > tierVolume {
+			amount += tierVolume * tier.UnitPrice
+			remaining -= tierVolume
+		} else {
+			amount += remaining * tier.UnitPrice
+			remaining = 0
+		}
+	}
+
+	record.RatedAmount = amount
 	return nil
 }

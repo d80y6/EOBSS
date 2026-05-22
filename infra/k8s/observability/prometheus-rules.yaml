@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: telcoflow-alerts
+  namespace: observability
+spec:
+  groups:
+  - name: telecom-kpis
+    rules:
+    - alert: HighOrderFailureRate
+      expr: rate(product_order_failed_total[5m]) / rate(product_order_created_total[5m]) > 0.05
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High Product Order failure rate detected"
+        description: "Order failure rate is {{ $value | printf \"%.2f\" }}% over the last 5 minutes."
+
+    - alert: ProvisioningSagaFailure
+      expr: rate(provisioning_saga_failed_total[5m]) > 0
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Provisioning Saga failures detected"
+        description: "Service activation is failing and triggering compensations."
+
+    - alert: CriticalNetworkAlarm
+      expr: telecom_active_alarms{severity="critical"} > 5
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Multiple critical network alarms active"
+        description: "Potential major outage. {{ $value }} critical alarms reported by Assurance service."

@@ -1,0 +1,58 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Mixed --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Order Throughput (Success vs Failure)",
+      "type": "graph",
+      "targets": [
+        { "expr": "rate(product_order_completed_total[5m])", "legendFormat": "Success" },
+        { "expr": "rate(product_order_failed_total[5m])", "legendFormat": "Failure" }
+      ]
+    },
+    {
+      "title": "Active Alarms by Severity",
+      "type": "stat",
+      "targets": [
+        { "expr": "telecom_active_alarms", "legendFormat": "{{severity}}" }
+      ]
+    },
+    {
+      "title": "Provisioning Saga Duration",
+      "type": "heatmap",
+      "targets": [
+        { "expr": "rate(provisioning_saga_duration_seconds_bucket[5m])" }
+      ]
+    }
+  ],
+  "schemaVersion": 26,
+  "style": "dark",
+  "tags": ["telcoflow", "oss", "bss"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "TelcoFlow Operations Overview",
+  "uid": "telcoflow-ops"
+}
