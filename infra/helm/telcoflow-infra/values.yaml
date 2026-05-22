@@ -1,0 +1,6 @@
+postgresql:
+  auth:
+    postgresPassword: admin-password
+kafka:
+  persistence:
+    enabled: false
