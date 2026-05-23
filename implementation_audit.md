@@ -13,7 +13,7 @@ The TelcoFlow platform demonstrates a strong architectural foundation following 
 
 ### 2. CRM Service (`services/crm-service`)
 - **Gaps:**
-    - `internal/handler/handler.go` is empty. No API endpoints implemented.
+    - Handlers now implemented (TMF-compliant Customer CRUD).
     - `CustomerRepository` interface exists but has no implementation (no GORM/PostgreSQL wiring).
     - `CustomerService` is minimal and lacks complex TMF lifecycle management.
 
@@ -38,11 +38,11 @@ The TelcoFlow platform demonstrates a strong architectural foundation following 
 ## Cross-Cutting Gaps
 - **Persistence:** No service has a concrete database implementation (GORM/PostgreSQL/ClickHouse).
 - **Communication:** Kafka producers/consumers are referenced in `libs/go-common` but not utilized in any service.
-- **Error Handling:** Lack of standardized TMF error response structures (TMF630).
+- **Error Handling:** Standardized TMF error response structures (TMF630) are available in `libs/go-common` but only utilized in the new CRM reference implementation.
 - **Observability:** OpenTelemetry and Prometheus instrumentation is not evident in service implementations.
 
 ## Recommendations
-1. **Reference Implementation:** Complete the CRM service (Handler -> Service -> Repository) as a benchmark for other services.
+1. **Reference Implementation:** The CRM service (Handler -> Service -> Repository) now serves as a benchmark for other services.
 2. **Infrastructure Wiring:** Implement the `go-common` modules for database and messaging within the microservices.
 3. **Workflow Integration:** Wire the Order Service Temporal workflows to actual service endpoints (Provisioning, Billing).
-4. **TMF Compliance:** Implement standardized TMF error responses and lifecycle status transitions.
+4. **TMF Compliance:** Implement standardized TMF error responses (as done in CRM) across all services.

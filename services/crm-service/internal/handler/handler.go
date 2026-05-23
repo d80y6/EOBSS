@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/telcoflow/telcoflow/libs/go-common/pkg/errors"
 	"github.com/telcoflow/telcoflow/services/crm-service/internal/domain"
 	"github.com/telcoflow/telcoflow/services/crm-service/internal/service"
 )
@@ -19,11 +20,13 @@ func NewCustomerHandler(service *service.CustomerService) *CustomerHandler {
 func (h *CustomerHandler) CreateCustomer(c echo.Context) error {
 	var customer domain.Customer
 	if err := c.Bind(&customer); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		tmfErr := errors.NewBadRequestError("Invalid request body")
+		return c.JSON(tmfErr.Status, tmfErr)
 	}
 
 	if err := h.service.CreateCustomer(c.Request().Context(), &customer); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		tmfErr := errors.NewInternalError(err.Error())
+		return c.JSON(tmfErr.Status, tmfErr)
 	}
 
 	return c.JSON(http.StatusCreated, customer)
@@ -33,7 +36,8 @@ func (h *CustomerHandler) GetCustomer(c echo.Context) error {
 	id := c.Param("id")
 	customer, err := h.service.GetCustomer(c.Request().Context(), id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "customer not found"})
+		tmfErr := errors.NewNotFoundError("Customer not found")
+		return c.JSON(tmfErr.Status, tmfErr)
 	}
 
 	return c.JSON(http.StatusOK, customer)
