@@ -1,6 +1,6 @@
 module github.com/telcoflow/telcoflow/services/iam-service
 
-go 1.25.0
+go 1.24
 
 require (
 	github.com/Nerzal/gocloak/v13 v13.9.0

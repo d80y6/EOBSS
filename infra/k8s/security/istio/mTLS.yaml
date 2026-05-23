@@ -1,0 +1,25 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: platform-mtls
+  namespace: telcoflow
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-internal-only
+  namespace: telcoflow
+spec:
+  selector:
+    matchLabels:
+      app: billing-service
+  rules:
+  - from:
+    - source:
+        namespaces: ["telcoflow"]
+    to:
+    - operation:
+        methods: ["GET", "POST"]

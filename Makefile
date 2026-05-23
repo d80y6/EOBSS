@@ -1,20 +1,24 @@
 # TelcoFlow Project Makefile
 
-SERVICES := iam-service crm-service catalog-service order-service billing-service inventory-service assurance-service provisioning-service
-APPS := admin-portal
+SERVICES := iam-service crm-service catalog-service order-service billing-service inventory-service assurance-service provisioning-service mediation-service partner-service incident-service
+APPS := admin-portal self-care-portal
 
 .PHONY: build test docker-build clean
 
 build:
 	@for service in $(SERVICES); do \
 		echo "Building $$service..."; \
-		cd services/$$service && go build ./... && cd ../..; \
+		if [ -d "services/$$service" ]; then \
+			cd services/$$service && go build ./... && cd ../..; \
+		fi \
 	done
 
 test:
 	@for service in $(SERVICES); do \
 		echo "Testing $$service..."; \
-		cd services/$$service && go test ./... && cd ../..; \
+		if [ -d "services/$$service" ]; then \
+			cd services/$$service && go test ./... && cd ../..; \
+		fi \
 	done
 
 docker-build:

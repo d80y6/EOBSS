@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package catalog.v1;
+
+option go_package = "github.com/telcoflow/telcoflow/api/proto/catalogv1";
+
+service CatalogService {
+  rpc GetProductOffering (GetProductOfferingRequest) returns (ProductOfferingResponse);
+}
+
+message GetProductOfferingRequest {
+  string id = 1;
+}
+
+message ProductOfferingResponse {
+  string id = 1;
+  string name = 2;
+  string status = 3;
+  double price = 4;
+  string currency = 5;
+}
