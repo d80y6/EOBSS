@@ -28,7 +28,7 @@ func (a *Activities) DecomposeOrderActivity(ctx context.Context, order domain.Pr
 	logger.Info("Decomposing order into service orders", zap.String("OrderID", order.ID))
 
 	var serviceOrders []string
-	for i, item := range order.OrderItems {
+	for i := range order.OrderItems {
 		// Mock decomposition logic: each product item becomes a service order
 		soID := fmt.Sprintf("SO-%s-%d", order.ID, i)
 		serviceOrders = append(serviceOrders, soID)

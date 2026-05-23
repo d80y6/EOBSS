@@ -6,10 +6,10 @@ import (
 
 // TMFError represents a TM Forum compliant error structure
 type TMFError struct {
-	Code    string \`json:"code"\`
-	Reason  string \`json:"reason"\`
-	Message string \`json:"message,omitempty"\`
-	Status  int    \`json:"-"\`
+	Code    string `json:"code"`
+	Reason  string `json:"reason"`
+	Message string `json:"message,omitempty"`
+	Status  int    `json:"-"`
 }
 
 func (e *TMFError) Error() string {

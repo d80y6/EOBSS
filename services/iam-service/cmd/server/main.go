@@ -9,8 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/logger"
-	"github.com/telcoflow/telcoflow/services/iam-service/internal/handler"
-	"github.com/telcoflow/telcoflow/services/iam-service/internal/service"
 )
 
 func main() {
