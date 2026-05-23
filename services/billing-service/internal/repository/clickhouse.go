@@ -15,7 +15,7 @@ func NewClickHouseCDRRepository(db *sql.DB) *ClickHouseCDRRepository {
 }
 
 func (r *ClickHouseCDRRepository) InsertCDR(ctx context.Context, record *domain.UsageRecord) error {
-	query := \`INSERT INTO cdr (id, usage_type, quantity, amount, timestamp, service_id) VALUES (?, ?, ?, ?, ?, ?)\`
+	query := "INSERT INTO cdr (id, usage_type, quantity, amount, timestamp, service_id) VALUES (?, ?, ?, ?, ?, ?)"
 	_, err := r.db.ExecContext(ctx, query,
 		record.ID,
 		record.UsageType,

@@ -1,10 +1,10 @@
 package workflow
 
 import (
-	"context"
 	"time"
 
 	"github.com/telcoflow/telcoflow/services/order-service/internal/domain"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -12,7 +12,7 @@ import (
 func ProductOrderWorkflow(ctx workflow.Context, order domain.ProductOrder) (string, error) {
 	ao := workflow.ActivityOptions{
 		StartToCloseTimeout: 10 * time.Minute,
-		RetryPolicy: &workflow.RetryPolicy{
+		RetryPolicy: &temporal.RetryPolicy{
 			InitialInterval:    time.Second,
 			BackoffCoefficient: 2.0,
 			MaximumInterval:    time.Minute,

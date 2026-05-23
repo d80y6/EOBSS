@@ -1,7 +1,6 @@
 package workflow
 
 import (
-	"context"
 	"time"
 	"go.temporal.io/sdk/workflow"
 )

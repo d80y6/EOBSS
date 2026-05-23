@@ -11,9 +11,9 @@ type MikroTikConfig struct {
 	Profile  string
 }
 
-const pppoeUserTemplate = \`
+const pppoeUserTemplate = `
 /ppp secret add name={{.Username}} password={{.Password}} profile={{.Profile}} service=pppoe
-\`
+`
 
 func GenerateMikroTikPPPoE(cfg MikroTikConfig) (string, error) {
 	tmpl, err := template.New("mikrotik").Parse(pppoeUserTemplate)
