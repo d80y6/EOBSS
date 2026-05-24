@@ -1,4 +1,4 @@
-package auth
+package iamauth
 
 import (
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/auth"

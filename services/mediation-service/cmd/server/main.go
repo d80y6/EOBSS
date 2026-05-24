@@ -9,6 +9,8 @@ import (
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/logger"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/kafka"
 	"github.com/telcoflow/telcoflow/services/mediation-service/internal/service"
+	"github.com/telcoflow/telcoflow/services/mediation-service/internal/collector"
+	"context"
 )
 
 func main() {
@@ -19,7 +21,23 @@ func main() {
 		kafkaBrokers = []string{"localhost:9092"}
 	}
 	producer := kafka.NewProducer(kafkaBrokers, "usage-events")
-	_ = service.NewUsageTransformer(producer)
+	transformer := service.NewUsageTransformer(producer)
+
+	// Start IPFIX Collector in background
+	dataChan := make(chan map[string]interface{}, 100)
+	coll := &collector.IPFIXCollector{Port: 2055}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go coll.Start(ctx, dataChan)
+
+	// Start Transformer consumer loop
+	go func() {
+		for data := range dataChan {
+			_, _ = transformer.Transform(ctx, data)
+		}
+	}()
 
 	e := echo.New()
 	e.Use(middleware.Logger())

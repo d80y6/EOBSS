@@ -15,7 +15,7 @@ import (
 func main() {
 	logger.InitLogger("assurance-service", "info")
 
-	engine := &correlation.AlarmCorrelationEngine{}
+	engine := correlation.NewAlarmCorrelationEngine()
 	svc := service.NewAssuranceService(engine)
 	hdl := handler.NewAlarmHandler(svc)
 

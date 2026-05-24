@@ -10,10 +10,12 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/logger"
+	"github.com/telcoflow/telcoflow/libs/go-common/pkg/auth"
 )
 
 func main() {
 	logger.InitLogger("order-service", "info")
+	rbac := auth.NewRBACManager()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -22,6 +24,15 @@ func main() {
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "UP"})
 	})
+
+	// TMF622 Routes
+	e.POST("/productOrderManagement/v4/productOrder", func(c echo.Context) error {
+		return c.JSON(http.StatusAccepted, map[string]string{"id": "ORD-123", "status": "Acknowledged"})
+	}, auth.RBACMiddleware(rbac, auth.PermOrderCreate))
+
+	e.GET("/productOrderManagement/v4/productOrder/:id", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{"id": c.Param("id"), "status": "InProgress"})
+	}, auth.RBACMiddleware(rbac, auth.PermOrderRead))
 
 	go func() {
 		port := os.Getenv("PORT")

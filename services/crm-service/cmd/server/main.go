@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/logger"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/tracing"
+	"github.com/telcoflow/telcoflow/libs/go-common/pkg/auth"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/kafka"
 	"github.com/telcoflow/telcoflow/services/crm-service/internal/handler"
 	"github.com/telcoflow/telcoflow/services/crm-service/internal/repository"
@@ -56,6 +57,7 @@ func main() {
 func startServer(repo service.CustomerRepository, producer *kafka.Producer) {
 	svc := service.NewCustomerService(repo, producer)
 	hdl := handler.NewCustomerHandler(svc)
+	rbac := auth.NewRBACManager()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -66,9 +68,9 @@ func startServer(repo service.CustomerRepository, producer *kafka.Producer) {
 	})
 
 	// Customer Routes
-	e.POST("/customer", hdl.CreateCustomer)
-	e.GET("/customer/:id", hdl.GetCustomer)
-	e.PUT("/customer/:id", hdl.UpdateCustomer)
+	e.POST("/customer", hdl.CreateCustomer, auth.RBACMiddleware(rbac, auth.PermCustomerUpdate))
+	e.GET("/customer/:id", hdl.GetCustomer, auth.RBACMiddleware(rbac, auth.PermOrderRead))
+	e.PUT("/customer/:id", hdl.UpdateCustomer, auth.RBACMiddleware(rbac, auth.PermCustomerUpdate))
 
 	go func() {
 		port := os.Getenv("PORT")
