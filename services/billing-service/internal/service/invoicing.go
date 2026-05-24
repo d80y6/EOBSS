@@ -3,18 +3,22 @@ package service
 import (
 	"context"
 	"github.com/telcoflow/telcoflow/services/billing-service/internal/domain"
+	"github.com/telcoflow/telcoflow/services/billing-service/internal/repository"
 	"time"
 )
 
 type InvoicingService struct {
-	// clickhouseRepo ClickHouseRepository
+	repo *repository.ClickHouseCDRRepository
+}
+
+func NewInvoicingService(repo *repository.ClickHouseCDRRepository) *InvoicingService {
+	return &InvoicingService{repo: repo}
 }
 
 func (s *InvoicingService) GenerateInvoice(ctx context.Context, accountID string, period string) (*domain.Invoice, error) {
-	// 1. Fetch all rated CDRs for the account and period from ClickHouse
-	// cdrItems, err := s.clickhouseRepo.GetRatedCDRs(ctx, accountID, period)
+	// In a real system, we would query the repo here
+	// cdrs, err := s.repo.GetCDRsByAccount(ctx, accountID, period)
 
-	// 2. Aggregate into Invoice Items
 	invoice := &domain.Invoice{
 		ID:             "INV-" + accountID + "-" + period,
 		BillingAccount: domain.AccountRef{ID: accountID},
@@ -23,7 +27,7 @@ func (s *InvoicingService) GenerateInvoice(ctx context.Context, accountID string
 		TotalAmount:    domain.Money{Amount: 0, Currency: "USD"},
 	}
 
-	// Mock aggregation
+	// Example item representing aggregated usage
 	item := domain.InvoiceItem{
 		ID:          "ITEM-001",
 		Description: "Usage: Data",
