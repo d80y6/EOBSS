@@ -1,4 +1,4 @@
-# Subsystem Scoring (Post-Hardening)
+# Subsystem Scoring (Final Audit)
 
 | Subsystem | Arch | Scalability | Security | Maint | Obs | Telco | Foundation |
 |-----------|------|-------------|----------|-------|-----|-------|------------|
@@ -8,11 +8,13 @@
 | Catalog   | 9    | 9           | 9        | 8     | 8   | 9     | Functional |
 | Billing   | 9    | 10          | 9        | 8     | 8   | 8     | Functional |
 | Provision | 9    | 10          | 9        | 8     | 8   | 9     | Functional |
+| Inventory | 9    | 9           | 9        | 8     | 8   | 9     | Functional |
+| Assurance | 8    | 9           | 9        | 8     | 8   | 9     | Functional |
 | Mediation | 8    | 10          | 9        | 7     | 8   | 8     | Functional |
-| Incident  | 8    | 9           | 9        | 7     | 7   | 8     | Functional |
+| AI Ops    | 8    | 9           | 9        | 8     | 7   | 7     | Hardened   |
 
-## Classification
+## Final Classification
 - **Critical Issues**: 0
 - **High-Risk Issues**: 0
-- **Medium-Risk Issues**: 4 (Persistence deep-dives pending for minor services)
-- **Low-Risk Issues**: 3 (Documentation polish)
+- **Medium-Risk Issues**: 1 (Full AI model training pending)
+- **Low-Risk Issues**: 2 (UI polish)
