@@ -25,10 +25,28 @@ const (
 
 // RBACManager handles role-based access control
 type RBACManager struct {
-	// Casbin or custom logic
+	rolePermissions map[Role][]Permission
+}
+
+func NewRBACManager() *RBACManager {
+	return &RBACManager{
+		rolePermissions: map[Role][]Permission{
+			RoleAdmin: {PermOrderCreate, PermOrderRead, PermCustomerUpdate, PermBillingView},
+			RoleCSR:   {PermOrderRead, PermCustomerUpdate},
+			RoleCustomer: {PermOrderRead},
+		},
+	}
 }
 
 func (m *RBACManager) HasPermission(ctx context.Context, role Role, perm Permission) bool {
-	// Implementation logic for role-to-permission mapping
-	return true
+	permissions, ok := m.rolePermissions[role]
+	if !ok {
+		return false
+	}
+	for _, p := range permissions {
+		if p == perm {
+			return true
+		}
+	}
+	return false
 }

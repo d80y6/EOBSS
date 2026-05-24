@@ -3,6 +3,10 @@ package workflow
 import (
 	"context"
 	"fmt"
+	"os"
+	"net/http"
+	"bytes"
+	"encoding/json"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/logger"
 	"github.com/telcoflow/telcoflow/services/order-service/internal/domain"
 	"go.uber.org/zap"
@@ -38,13 +42,49 @@ func (a *Activities) DecomposeOrderActivity(ctx context.Context, order domain.Pr
 }
 
 func (a *Activities) ProvisionServiceActivity(ctx context.Context, serviceOrderID string) error {
-	logger.Info("Provisioning service", zap.String("ServiceOrderID", serviceOrderID))
-	// In a real system, this would call the provisioning-service API
+	logger.Info("Provisioning service via provisioning-service", zap.String("ServiceOrderID", serviceOrderID))
+
+	provSvcURL := os.Getenv("PROVISIONING_SERVICE_URL")
+	if provSvcURL == "" {
+		provSvcURL = "http://provisioning-service:8080"
+	}
+
+	reqBody, _ := json.Marshal(map[string]string{
+		"serviceOrderId": serviceOrderID,
+		"action": "activate",
+	})
+
+	resp, err := http.Post(provSvcURL+"/provision", "application/json", bytes.NewBuffer(reqBody))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return fmt.Errorf("provisioning service returned status: %d", resp.StatusCode)
+	}
+
 	return nil
 }
 
 func (a *Activities) ActivateBillingActivity(ctx context.Context, order domain.ProductOrder) error {
 	logger.Info("Activating billing for order", zap.String("OrderID", order.ID))
-	// In a real system, this would call the billing-service API
+
+	billingSvcURL := os.Getenv("BILLING_SERVICE_URL")
+	if billingSvcURL == "" {
+		billingSvcURL = "http://billing-service:8080"
+	}
+
+	reqBody, _ := json.Marshal(order)
+	resp, err := http.Post(billingSvcURL+"/billing/activate", "application/json", bytes.NewBuffer(reqBody))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("billing service returned status: %d", resp.StatusCode)
+	}
+
 	return nil
 }
