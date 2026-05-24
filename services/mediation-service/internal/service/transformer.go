@@ -2,12 +2,18 @@ package service
 
 import (
 	"context"
+	"github.com/telcoflow/telcoflow/libs/go-common/pkg/kafka"
 	"github.com/telcoflow/telcoflow/services/mediation-service/internal/domain"
 	"time"
+	"encoding/json"
 )
 
 type UsageTransformer struct {
-	// kafkaProducer KafkaProducer
+	producer *kafka.Producer
+}
+
+func NewUsageTransformer(producer *kafka.Producer) *UsageTransformer {
+	return &UsageTransformer{producer: producer}
 }
 
 func (t *UsageTransformer) Transform(ctx context.Context, rawData map[string]interface{}) (*domain.UsageEvent, error) {
@@ -22,7 +28,13 @@ func (t *UsageTransformer) Transform(ctx context.Context, rawData map[string]int
 	}
 
 	// Map IP address to service_id via Inventory lookup or cache
-	// event.ServiceID = t.lookupServiceID(rawData["src_ip"].(string))
+	if serviceID, ok := rawData["service_id"].(string); ok {
+		event.ServiceID = serviceID
+	}
+
+	// Forward to Kafka for Billing consumption
+	msg, _ := json.Marshal(event)
+	_ = t.producer.PublishEvent(ctx, event.ID, msg)
 
 	return event, nil
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/logger"
+	"github.com/telcoflow/telcoflow/libs/go-common/pkg/tracing"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/kafka"
 	"github.com/telcoflow/telcoflow/services/crm-service/internal/handler"
 	"github.com/telcoflow/telcoflow/services/crm-service/internal/repository"
@@ -20,6 +21,14 @@ import (
 
 func main() {
 	logger.InitLogger("crm-service", "info")
+
+	otelEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if otelEndpoint != "" {
+		tp, err := tracing.InitTracer("crm-service", otelEndpoint)
+		if err == nil {
+			defer tp.Shutdown(context.Background())
+		}
+	}
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
@@ -37,10 +46,7 @@ func main() {
 
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		logger.Log.Warn("Failed to connect to real database, falling back to mock for audit/demo")
-		repo := service.NewMockCustomerRepo()
-		startServer(repo, producer)
-		return
+		logger.Fatal("Failed to connect to real database")
 	}
 
 	repo := repository.NewGormCustomerRepo(db)
