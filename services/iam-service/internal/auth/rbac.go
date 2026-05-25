@@ -1,52 +1,33 @@
-package auth
+package iamauth
 
 import (
-	"context"
+	"github.com/telcoflow/telcoflow/libs/go-common/pkg/auth"
 )
 
-type Role string
+// Re-exporting from go-common to maintain compatibility with existing code
+// while moving the source of truth to the shared library.
+
+type Role = auth.Role
 
 const (
-	RoleAdmin       Role = "admin"
-	RoleCSR         Role = "csr"         // Customer Service Representative
-	RoleNetworkEng  Role = "network_eng" // Network Engineer
-	RoleBillingMgr  Role = "billing_mgr"
-	RoleCustomer    Role = "customer"
+	RoleAdmin      = auth.RoleAdmin
+	RoleCSR        = auth.RoleCSR
+	RoleNetworkEng = auth.RoleNetworkEng
+	RoleBillingMgr = auth.RoleBillingMgr
+	RoleCustomer   = auth.RoleCustomer
 )
 
-type Permission string
+type Permission = auth.Permission
 
 const (
-	PermOrderCreate    Permission = "order:create"
-	PermOrderRead      Permission = "order:read"
-	PermCustomerUpdate Permission = "customer:update"
-	PermBillingView    Permission = "billing:view"
+	PermOrderCreate    = auth.PermOrderCreate
+	PermOrderRead      = auth.PermOrderRead
+	PermCustomerUpdate = auth.PermCustomerUpdate
+	PermBillingView    = auth.PermBillingView
 )
 
-// RBACManager handles role-based access control
-type RBACManager struct {
-	rolePermissions map[Role][]Permission
-}
+type RBACManager = auth.RBACManager
 
 func NewRBACManager() *RBACManager {
-	return &RBACManager{
-		rolePermissions: map[Role][]Permission{
-			RoleAdmin: {PermOrderCreate, PermOrderRead, PermCustomerUpdate, PermBillingView},
-			RoleCSR:   {PermOrderRead, PermCustomerUpdate},
-			RoleCustomer: {PermOrderRead},
-		},
-	}
-}
-
-func (m *RBACManager) HasPermission(ctx context.Context, role Role, perm Permission) bool {
-	permissions, ok := m.rolePermissions[role]
-	if !ok {
-		return false
-	}
-	for _, p := range permissions {
-		if p == perm {
-			return true
-		}
-	}
-	return false
+	return auth.NewRBACManager()
 }

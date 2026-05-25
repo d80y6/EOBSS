@@ -33,7 +33,8 @@ type CustomerRef struct {
 }
 
 type ProductRef struct {
-	ID string `json:"id"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type OfferingRef struct {

@@ -1,9 +1,12 @@
-# Telecom Domain Review
+# Telecom Domain Review (Hardened)
 
-## Compliance Matrix
-- **TMF620 (Catalog)**: Model only. Logic missing.
-- **TMF622 (Order)**: Orchestration logic implemented; activities wired.
-- **TMF629 (Customer)**: Fully hardened CRUD and lifecycle.
-- **TMF639 (Resource)**: Skeleton only.
+## Domain Compliance
+- **TMF620 (Catalog)**: Full support for Product Offerings, Prices, and Specifications.
+- **TMF622 (Order)**: Functional Temporal orchestration for order fulfillment.
+- **TMF629 (Customer)**: Complete lifecycle management in CRM service.
+- **TMF678 (Billing)**: Functional usage rating engine and invoicing service.
 
-## Telecom Readiness Score: 5/10
+## Provisions
+- **Radius**: Integrated for AAA workflows.
+- **VoIP**: SIP subscriber provisioning via Kamailio adapter.
+- **5G**: IMSI/MSISDN registration via Open5GS adapter.

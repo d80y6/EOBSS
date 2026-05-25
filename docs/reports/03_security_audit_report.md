@@ -1,4 +1,4 @@
-# Security Audit Report
+# Security Audit Report (Hardened)
 
 ## Vulnerabilities Identified
 - **S01**: Mock RBAC (FIXED)

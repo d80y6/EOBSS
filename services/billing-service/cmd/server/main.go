@@ -10,10 +10,30 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/logger"
+	"github.com/telcoflow/telcoflow/services/billing-service/internal/handler"
+	"github.com/telcoflow/telcoflow/services/billing-service/internal/rating"
+	"github.com/telcoflow/telcoflow/services/billing-service/internal/repository"
+	"github.com/telcoflow/telcoflow/services/billing-service/internal/service"
+	"database/sql"
 )
 
 func main() {
 	logger.InitLogger("billing-service", "info")
+
+	// Initialize ClickHouse repository
+	chURL := os.Getenv("CLICKHOUSE_URL")
+	var repo *repository.ClickHouseCDRRepository
+	if chURL != "" {
+		db, err := sql.Open("clickhouse", chURL)
+		if err == nil {
+			repo = repository.NewClickHouseCDRRepository(db)
+		}
+	}
+	_ = repo // Prepared for future persistence depth
+
+	ratingEngine := rating.NewRatingEngine()
+	svc := service.NewInvoicingService(ratingEngine)
+	hdl := handler.NewBillingHandler(svc)
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -22,6 +42,11 @@ func main() {
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "UP"})
 	})
+
+	// Billing Routes
+	e.POST("/billing/invoice/:customerId", hdl.GenerateInvoice)
+	e.POST("/billing/usage", hdl.ProcessUsage)
+	e.POST("/billing/activate", hdl.ActivateBilling)
 
 	go func() {
 		port := os.Getenv("PORT")

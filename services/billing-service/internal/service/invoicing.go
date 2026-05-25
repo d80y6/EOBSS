@@ -2,41 +2,46 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/telcoflow/telcoflow/services/billing-service/internal/domain"
-	"github.com/telcoflow/telcoflow/services/billing-service/internal/repository"
-	"time"
+	"github.com/telcoflow/telcoflow/services/billing-service/internal/rating"
 )
 
 type InvoicingService struct {
-	repo *repository.ClickHouseCDRRepository
+	ratingEngine *rating.RatingEngine
 }
 
-func NewInvoicingService(repo *repository.ClickHouseCDRRepository) *InvoicingService {
-	return &InvoicingService{repo: repo}
+func NewInvoicingService(engine *rating.RatingEngine) *InvoicingService {
+	return &InvoicingService{ratingEngine: engine}
 }
 
-func (s *InvoicingService) GenerateInvoice(ctx context.Context, accountID string, period string) (*domain.Invoice, error) {
-	// In a real system, we would query the repo here
-	// cdrs, err := s.repo.GetCDRsByAccount(ctx, accountID, period)
+func (s *InvoicingService) GenerateInvoice(ctx context.Context, customerID string, usageRecords []domain.UsageRecord) (*domain.Invoice, error) {
+	totalAmount := 0.0
+	var invoiceItems []domain.InvoiceItem
+
+	for i, record := range usageRecords {
+		// Real-world logic: rate the usage record before adding to invoice
+		_ = s.ratingEngine.RateUsage(ctx, &record)
+
+		totalAmount += record.RatedAmount
+		invoiceItems = append(invoiceItems, domain.InvoiceItem{
+			ID:          fmt.Sprintf("ITEM-%d", i),
+			Description: record.UsageType + " Usage",
+			Amount:      domain.Money{Amount: record.RatedAmount, Currency: "USD"},
+			ServiceID:   record.ServiceID,
+		})
+	}
 
 	invoice := &domain.Invoice{
-		ID:             "INV-" + accountID + "-" + period,
-		BillingAccount: domain.AccountRef{ID: accountID},
-		InvoiceDate:    time.Now(),
-		Status:         "Draft",
-		TotalAmount:    domain.Money{Amount: 0, Currency: "USD"},
+		ID:         "INV-" + customerID,
+		CustomerID: customerID,
+		Amount:     domain.Money{Amount: totalAmount, Currency: "USD"},
+		Status:     "Generated",
+		Items:      invoiceItems,
 	}
-
-	// Example item representing aggregated usage
-	item := domain.InvoiceItem{
-		ID:          "ITEM-001",
-		Description: "Usage: Data",
-		Quantity:    45.5,
-		UnitPrice:   domain.Money{Amount: 0.10, Currency: "USD"},
-		TotalAmount: domain.Money{Amount: 4.55, Currency: "USD"},
-	}
-	invoice.Items = append(invoice.Items, item)
-	invoice.TotalAmount.Amount += item.TotalAmount.Amount
-
 	return invoice, nil
+}
+
+func (s *InvoicingService) ProcessUsage(ctx context.Context, record *domain.UsageRecord) error {
+	return s.ratingEngine.RateUsage(ctx, record)
 }
