@@ -8,6 +8,8 @@ RUN go mod tidy
 RUN go build -o crm-server ./cmd/server/main.go || echo "main.go missing"
 
 FROM alpine:latest
+RUN addgroup -S telcoflow && adduser -S telcoflow -G telcoflow
+USER telcoflow
 WORKDIR /app
 COPY --from=builder /app/services/crm-service/crm-server .
 EXPOSE 8080

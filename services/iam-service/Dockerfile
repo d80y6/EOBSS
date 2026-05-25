@@ -10,6 +10,8 @@ RUN go mod download
 RUN go build -o iam-server ./cmd/server/main.go
 
 FROM alpine:latest
+RUN addgroup -S telcoflow && adduser -S telcoflow -G telcoflow
+USER telcoflow
 WORKDIR /app
 COPY --from=builder /app/services/iam-service/iam-server .
 

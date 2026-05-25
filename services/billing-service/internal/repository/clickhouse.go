@@ -22,7 +22,7 @@ func (r *ClickHouseCDRRepository) InsertCDR(ctx context.Context, record *domain.
 		record.UsageQuantity,
 		record.RatedAmount,
 		record.Timestamp,
-		record.ServiceRef,
+		record.ServiceID,
 	)
 	return err
 }

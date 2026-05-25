@@ -9,7 +9,11 @@ import (
 
 // AlarmCorrelationEngine maps network faults to business impact
 type AlarmCorrelationEngine struct {
-	// inventorySvc InventoryClient
+	rca *RCAEngine
+}
+
+func NewAlarmCorrelationEngine() *AlarmCorrelationEngine {
+	return &AlarmCorrelationEngine{rca: &RCAEngine{}}
 }
 
 func (e *AlarmCorrelationEngine) Correlate(ctx context.Context, alarm *domain.Alarm) error {
@@ -18,17 +22,38 @@ func (e *AlarmCorrelationEngine) Correlate(ctx context.Context, alarm *domain.Al
 		zap.String("resource", alarm.AlarmedResource.ID),
 	)
 
-	// 1. Identify Topology
-	// (Query Inventory to see what services depend on this resource)
+	// In a real system, we would query topology and perform RCA
+	// _, _ = e.rca.Analyze(ctx, []domain.Alarm{*alarm})
 
-	// 2. Identify Impacted Customers
-	// (e.g. If Fiber OLT is down, all connected ONTs are impacted)
-
-	// 3. Enrich Alarm with Impact Level
 	if alarm.Severity == "Critical" {
-		// Logic to automatically open Trouble Tickets for major outages
 		logger.Info("Critical outage detected. Triggering automated ticket generation.")
 	}
 
 	return nil
+}
+
+// RCAEngine implements heuristic-based Root Cause Analysis
+type RCAEngine struct{}
+
+func (e *RCAEngine) Analyze(ctx context.Context, alarms []domain.Alarm) (*domain.Alarm, error) {
+	if len(alarms) == 0 {
+		return nil, nil
+	}
+
+	logger.Info("Performing RCA on alarm group", zap.Int("count", len(alarms)))
+
+	var rootCause *domain.Alarm
+	for _, alarm := range alarms {
+		if alarm.AlarmedResource.Type == "OLT" || alarm.AlarmedResource.Type == "CoreRouter" {
+			rootCause = &alarm
+			break
+		}
+	}
+
+	if rootCause == nil {
+		rootCause = &alarms[0]
+	}
+
+	logger.Info("RCA identified root cause", zap.String("id", rootCause.ID))
+	return rootCause, nil
 }

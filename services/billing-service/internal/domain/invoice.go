@@ -1,34 +1,21 @@
 package domain
 
-import (
-	"time"
-)
+import "time"
 
-// Invoice represents the TMF678 Customer Bill entity
 type Invoice struct {
-	ID              string          `json:"id" gorm:"primaryKey"`
-	BillingAccount  AccountRef      `json:"billingAccount" gorm:"serializer:json"`
-	InvoiceDate     time.Time       `json:"invoiceDate"`
-	DueDate         time.Time       `json:"dueDate"`
-	TotalAmount     Money           `json:"totalAmount" gorm:"serializer:json"`
-	TaxAmount       Money           `json:"taxAmount" gorm:"serializer:json"`
-	RemainingAmount Money           `json:"remainingAmount" gorm:"serializer:json"`
-	Status          string          `json:"status"` // Draft, Issued, Paid, Overdue
-	Items           []InvoiceItem   `json:"invoiceItem" gorm:"serializer:json"`
+	ID         string        `json:"id"`
+	CustomerID string        `json:"customerId"`
+	Amount     Money         `json:"amount"`
+	DueDate    time.Time     `json:"dueDate"`
+	Status     string        `json:"status"`
+	Items      []InvoiceItem `json:"invoiceItem"`
 }
 
 type InvoiceItem struct {
-	ID          string    `json:"id"`
-	Description string    `json:"description"`
-	Quantity    float64   `json:"quantity"`
-	UnitPrice   Money     `json:"unitPrice"`
-	TotalAmount Money     `json:"totalAmount"`
-	ServiceRef  string    `json:"serviceRef,omitempty"`
-}
-
-type AccountRef struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID          string  `json:"id"`
+	Description string  `json:"description"`
+	Amount      Money   `json:"amount"`
+	ServiceID   string  `json:"serviceId"`
 }
 
 type Money struct {
@@ -36,13 +23,12 @@ type Money struct {
 	Currency string  `json:"currency"`
 }
 
-// UsageRecord (CDR) represents a mediated usage event
 type UsageRecord struct {
 	ID            string    `json:"id"`
-	UsageType     string    `json:"usageType"` // Data, Voice, SMS
+	ServiceID     string    `json:"serviceId"`
+	UsageType     string    `json:"usageType"`
 	UsageQuantity float64   `json:"usageQuantity"`
-	UsageUnit     string    `json:"usageUnit"` // MB, Minutes, Count
+	UsageUnit     string    `json:"usageUnit"`
+	RatedAmount   float64   `json:"ratedAmount"`
 	Timestamp     time.Time `json:"timestamp"`
-	ServiceRef    string    `json:"serviceRef"`
-	RatedAmount   float64   `json:"ratedAmount,omitempty"`
 }

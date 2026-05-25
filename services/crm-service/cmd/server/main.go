@@ -10,17 +10,54 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/logger"
+	"github.com/telcoflow/telcoflow/libs/go-common/pkg/tracing"
+	"github.com/telcoflow/telcoflow/libs/go-common/pkg/auth"
+	"github.com/telcoflow/telcoflow/libs/go-common/pkg/kafka"
 	"github.com/telcoflow/telcoflow/services/crm-service/internal/handler"
+	"github.com/telcoflow/telcoflow/services/crm-service/internal/repository"
 	"github.com/telcoflow/telcoflow/services/crm-service/internal/service"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
 	logger.InitLogger("crm-service", "info")
 
-	// Initialize Repository, Service and Handler
-	repo := service.NewMockCustomerRepo()
-	svc := service.NewCustomerService(repo)
+	otelEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if otelEndpoint != "" {
+		tp, err := tracing.InitTracer("crm-service", otelEndpoint)
+		if err == nil {
+			defer tp.Shutdown(context.Background())
+		}
+	}
+
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = "host=localhost user=postgres password=postgres dbname=crm port=5432 sslmode=disable"
+	}
+
+	kafkaBrokers := []string{os.Getenv("KAFKA_BROKERS")}
+	if len(kafkaBrokers) == 0 || kafkaBrokers[0] == "" {
+		kafkaBrokers = []string{"localhost:9092"}
+	}
+	producer := kafka.NewProducer(kafkaBrokers, "customer-events")
+
+	var db *gorm.DB
+	var err error
+
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		logger.Fatal("Failed to connect to real database")
+	}
+
+	repo := repository.NewGormCustomerRepo(db)
+	startServer(repo, producer)
+}
+
+func startServer(repo service.CustomerRepository, producer *kafka.Producer) {
+	svc := service.NewCustomerService(repo, producer)
 	hdl := handler.NewCustomerHandler(svc)
+	rbac := auth.NewRBACManager()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -31,8 +68,9 @@ func main() {
 	})
 
 	// Customer Routes
-	e.POST("/customer", hdl.CreateCustomer)
-	e.GET("/customer/:id", hdl.GetCustomer)
+	e.POST("/customer", hdl.CreateCustomer, auth.RBACMiddleware(rbac, auth.PermCustomerUpdate))
+	e.GET("/customer/:id", hdl.GetCustomer, auth.RBACMiddleware(rbac, auth.PermOrderRead))
+	e.PUT("/customer/:id", hdl.UpdateCustomer, auth.RBACMiddleware(rbac, auth.PermCustomerUpdate))
 
 	go func() {
 		port := os.Getenv("PORT")

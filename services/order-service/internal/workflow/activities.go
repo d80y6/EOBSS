@@ -3,12 +3,27 @@ package workflow
 import (
 	"context"
 	"fmt"
+	"os"
+	"net/http"
+	"bytes"
+	"encoding/json"
 	"github.com/telcoflow/telcoflow/libs/go-common/pkg/logger"
+	"github.com/telcoflow/telcoflow/libs/go-common/pkg/resilience"
 	"github.com/telcoflow/telcoflow/services/order-service/internal/domain"
 	"go.uber.org/zap"
 )
 
-type Activities struct{}
+type Activities struct {
+	provisionCB *resilience.CircuitBreaker
+	billingCB   *resilience.CircuitBreaker
+}
+
+func NewActivities() *Activities {
+	return &Activities{
+		provisionCB: resilience.NewCircuitBreaker("provisioning-service"),
+		billingCB:   resilience.NewCircuitBreaker("billing-service"),
+	}
+}
 
 func (a *Activities) ValidateOrderActivity(ctx context.Context, order domain.ProductOrder) (bool, error) {
 	logger.Info("Validating order", zap.String("OrderID", order.ID))
@@ -29,7 +44,6 @@ func (a *Activities) DecomposeOrderActivity(ctx context.Context, order domain.Pr
 
 	var serviceOrders []string
 	for i := range order.OrderItems {
-		// Mock decomposition logic: each product item becomes a service order
 		soID := fmt.Sprintf("SO-%s-%d", order.ID, i)
 		serviceOrders = append(serviceOrders, soID)
 	}
@@ -38,13 +52,55 @@ func (a *Activities) DecomposeOrderActivity(ctx context.Context, order domain.Pr
 }
 
 func (a *Activities) ProvisionServiceActivity(ctx context.Context, serviceOrderID string) error {
-	logger.Info("Provisioning service", zap.String("ServiceOrderID", serviceOrderID))
-	// In a real system, this would call the provisioning-service API
-	return nil
+	logger.Info("Provisioning service via provisioning-service", zap.String("ServiceOrderID", serviceOrderID))
+
+	_, err := a.provisionCB.Execute(func() (interface{}, error) {
+		provSvcURL := os.Getenv("PROVISIONING_SERVICE_URL")
+		if provSvcURL == "" {
+			provSvcURL = "http://provisioning-service:8080"
+		}
+
+		reqBody, _ := json.Marshal(map[string]string{
+			"serviceOrderId": serviceOrderID,
+			"action":         "activate",
+		})
+
+		resp, err := http.Post(provSvcURL+"/provision", "application/json", bytes.NewBuffer(reqBody))
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+			return nil, fmt.Errorf("provisioning service returned status: %d", resp.StatusCode)
+		}
+		return nil, nil
+	})
+
+	return err
 }
 
 func (a *Activities) ActivateBillingActivity(ctx context.Context, order domain.ProductOrder) error {
 	logger.Info("Activating billing for order", zap.String("OrderID", order.ID))
-	// In a real system, this would call the billing-service API
-	return nil
+
+	_, err := a.billingCB.Execute(func() (interface{}, error) {
+		billingSvcURL := os.Getenv("BILLING_SERVICE_URL")
+		if billingSvcURL == "" {
+			billingSvcURL = "http://billing-service:8080"
+		}
+
+		reqBody, _ := json.Marshal(order)
+		resp, err := http.Post(billingSvcURL+"/billing/activate", "application/json", bytes.NewBuffer(reqBody))
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("billing service returned status: %d", resp.StatusCode)
+		}
+		return nil, nil
+	})
+
+	return err
 }

@@ -1,8 +1,6 @@
 package resilience
 
 import (
-	"context"
-	"errors"
 	"github.com/sony/gobreaker"
 	"time"
 )

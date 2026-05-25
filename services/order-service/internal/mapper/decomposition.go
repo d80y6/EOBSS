@@ -5,31 +5,25 @@ import (
 	"github.com/telcoflow/telcoflow/services/order-service/internal/domain"
 )
 
-// DecomposeProductOrder maps a Product Order (Customer perspective) to Service Orders (Network perspective)
-func DecomposeProductOrder(productOrder domain.ProductOrder) ([]string, error) {
+// OrderDecomposer maps TMF622 Product Orders to TMF641 Service Orders
+type OrderDecomposer struct{}
+
+func (d *OrderDecomposer) Decompose(order domain.ProductOrder) ([]string, error) {
 	var serviceOrders []string
 
-	for _, item := range productOrder.OrderItems {
-		// Example: A "Fiber Broadband" product offering decomposes into:
-		// 1. PPPoE Service Activation
-		// 2. ONT Configuration
-		// 3. Billing Activation
+	for _, item := range order.OrderItems {
+		// Logic: If Product is 'Broadband', decompose to 'Radius' and 'Port' services
+		// In a real system, this would query the Catalog for Product-to-Service mappings
 
-		switch item.Offering.Name {
-		case "Fiber Broadband":
-			serviceOrders = append(serviceOrders,
-				fmt.Sprintf("SO-PPPOE-%s", item.ID),
-				fmt.Sprintf("SO-ONT-%s", item.ID),
-			)
-		case "Mobile 5G":
-			serviceOrders = append(serviceOrders,
-				fmt.Sprintf("SO-HSS-%s", item.ID),
-			)
-		default:
-			serviceOrders = append(serviceOrders,
-				fmt.Sprintf("SO-GENERIC-%s", item.ID),
-			)
+		serviceType := "Generic"
+		if item.Product.Name == "Broadband-Fiber" {
+			serviceType = "Radius"
+		} else if item.Product.Name == "VoIP-Mobile" {
+			serviceType = "Kamailio"
 		}
+
+		soID := fmt.Sprintf("SO-%s-%s", order.ID, serviceType)
+		serviceOrders = append(serviceOrders, soID)
 	}
 
 	return serviceOrders, nil
