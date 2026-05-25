@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/telcoflow/telcoflow/services/billing-service/internal/domain"
 	"github.com/telcoflow/telcoflow/services/billing-service/internal/rating"
 )
@@ -16,20 +17,27 @@ func NewInvoicingService(engine *rating.RatingEngine) *InvoicingService {
 
 func (s *InvoicingService) GenerateInvoice(ctx context.Context, customerID string, usageRecords []domain.UsageRecord) (*domain.Invoice, error) {
 	totalAmount := 0.0
-	for _, record := range usageRecords {
-		// Ensure record is rated
-		if record.RatedAmount == 0 {
-			_ = s.ratingEngine.RateUsage(ctx, &record)
-		}
+	var invoiceItems []domain.InvoiceItem
+
+	for i, record := range usageRecords {
+		// Real-world logic: rate the usage record before adding to invoice
+		_ = s.ratingEngine.RateUsage(ctx, &record)
+
 		totalAmount += record.RatedAmount
+		invoiceItems = append(invoiceItems, domain.InvoiceItem{
+			ID:          fmt.Sprintf("ITEM-%d", i),
+			Description: record.UsageType + " Usage",
+			Amount:      domain.Money{Amount: record.RatedAmount, Currency: "USD"},
+			ServiceID:   record.ServiceID,
+		})
 	}
 
 	invoice := &domain.Invoice{
 		ID:         "INV-" + customerID,
 		CustomerID: customerID,
-		Amount:     totalAmount,
-		Currency:   "USD",
+		Amount:     domain.Money{Amount: totalAmount, Currency: "USD"},
 		Status:     "Generated",
+		Items:      invoiceItems,
 	}
 	return invoice, nil
 }

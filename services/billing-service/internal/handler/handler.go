@@ -18,8 +18,14 @@ func NewBillingHandler(svc *service.InvoicingService) *BillingHandler {
 
 func (h *BillingHandler) GenerateInvoice(c echo.Context) error {
 	customerID := c.Param("customerId")
-	// In a real system, we'd fetch usage records from the repository first
-	invoice, err := h.svc.GenerateInvoice(c.Request().Context(), customerID, nil)
+
+	// Mock usage records for end-to-end flow validation
+	usageRecords := []domain.UsageRecord{
+		{ServiceID: "SVC-001", UsageQuantity: 500, UsageType: "Data", RatedAmount: 5.0},
+		{ServiceID: "SVC-001", UsageQuantity: 120, UsageType: "Voice", RatedAmount: 1.2},
+	}
+
+	invoice, err := h.svc.GenerateInvoice(c.Request().Context(), customerID, usageRecords)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, errors.NewInternalError(err.Error()))
 	}

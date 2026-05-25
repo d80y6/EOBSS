@@ -14,7 +14,7 @@ type NetBoxClient struct {
 	httpClient *http.Client
 }
 
-func NewNetBoxClient(baseURL, token string) *NetBoxClient {
+func NewClient(baseURL, token string) *NetBoxClient {
 	return &NetBoxClient{
 		BaseURL:  baseURL,
 		APIToken: token,
